@@ -1,0 +1,156 @@
+---
+title: "Visualização de Dados"
+author: "Heriberto Alexandre da Silva Filho"
+date: "02/10/2020"
+output: html_document
+---
+
+# Relatório - Atividade 12 {.tabset}
+
+```{r geral, warning=FALSE, include=FALSE}
+MRT_1F <-c(517.1468515630205, 85.13094142168089, 30.333207896694553, 12.694776264558937, 3.3041601673945418, 1.1823111717498882, 1.1892293502386786)
+
+MRT_3F <-c(156.68929936163462, 11.540837783562276, 0.4512835621696538, 0.4509797929766453, 0.4502068233039181, 0.4496185276300172, 0.4543157082191288)
+
+MRT_5F <-c(83.90319666471157, 0.3068151086494968, 0.30522314133037304, 0.3072588968084928, 0.30655265997285697, 0.3055812715727718, 0.3053297166713006)
+
+MRT_10F <-c(29.55430642951759, 0.19832832665772515, 0.1971923924717474, 0.19796648905716516, 0.19615594370806338, 0.2034569237883263, 0.19617420889447737)
+
+MRT_15F <-c(11.317736530583566, 0.167364215666193, 0.16172168266811013, 0.16701085329580515, 0.1598052657153692, 0.1645934043532696, 0.16216563797118075)
+
+MRT_sem_F <-c(11.93430909937736, 0.6095414637034009, 0.6060645101029295, 0.612167181646899, 0.6146761002685637, 0.6096747087200697, 0.6125810476877268)
+
+clock <- c(0.1, 0.5, 1, 1.5, 2, 2.5, 3)
+```
+
+
+## Questão 1
+```{r questão1, echo=FALSE}
+plot(clock,MRT_1F,type = "o",pch=4,
+     xlab ="Time between Things requests(seconds)",
+     ylab = "Response Time (sec)")
+
+lines(clock,MRT_3F,type="o",pch=7,col="yellow")
+
+lines(clock,MRT_5F,type="o",pch=1,col="red")
+
+lines(clock,MRT_10F,type="o",pch=2,col="blue")
+
+lines(clock,MRT_15F,type="o",pch=5,col="pink")
+
+lines(clock,MRT_sem_F,type="o",pch=7,col="green")
+
+legend("topright",pch=c(7,1,2,5,7),col=c("yellow","red","blue","pink","green"), legend = c("1 Fog","3 Fogs","5 Fogs","10 Folgs","15 Folgs","w/o Folg"))
+
+colors <- c( "#E6E6E6", "#666666")
+
+#1#
+valores <- rbind(MRT_sem_F,MRT_1F)
+barplot(valores,names.arg = clock,
+        xlab ="Time between Things requests",
+     ylab = "Response Time (s)",
+     beside = T,log="y", col=colors)
+legend("topright",pch=c(15,15),col=colors, legend=c("w/0 Flog","1 Flog"))
+
+
+#3#
+valores <- rbind(MRT_sem_F,MRT_3F)
+barplot(valores,names.arg = clock,
+        xlab ="Time between Things requests",
+     ylab = "Response Time (s)",
+     beside = T,log="y", col=colors)
+legend("topright",pch=c(15,15),col=colors, legend=c("w/0 Flog","3 Flogs"))
+
+
+#5#
+valores <- rbind(MRT_sem_F,MRT_5F)
+barplot(valores,names.arg = clock,
+        xlab ="Time between Things requests",
+     ylab = "Response Time (s)",
+     beside = T,log="y", col=colors)
+legend("topright",pch=c(15,15),col=colors, legend=c("w/0 Flog","5 Flogs"))
+
+
+#10#
+valores <- rbind(MRT_sem_F,MRT_10F)
+barplot(valores,names.arg = clock,
+        xlab ="Time between Things requests",
+     ylab = "Response Time (s)",
+     beside = T,log="y", col=colors)
+legend("topright",pch=c(15,15),col=colors, legend=c("w/0 Flog","10 Flogs"))
+
+#15#
+valores <- rbind(MRT_sem_F,MRT_15F)
+barplot(valores,names.arg = clock,
+        xlab ="Time between Things requests",
+     ylab = "Response Time (s)",
+     beside = T,log="y", col=colors)
+legend("topright",pch=c(15,15),col=colors, legend=c("w/0 Flog","15 Flogs"))
+
+
+
+```
+
+## Questão 2
+```{r Questão2, echo=FALSE, warning=FALSE}
+
+valores_10_19 <- c(53.8,43.6,2.6)
+valores_20_29 <- c(33.9,54.2,11.9)
+valores_30_39 <- c(2.6,60.5,36.8)
+valores_40_49 <- c(0.0,21.4,78.6)
+
+valores <- cbind(valores_10_19,valores_20_29,valores_30_39, valores_40_49)
+
+categorias <- c("$10-19","$20-29","$30-39","$40-49")
+barplot(valores,names.arg = categorias,
+        xlab ="Time between Things requests(seconds)",main = "Meal Price")
+
+```
+
+## Questão3
+```{r Questão 3, warning=FALSE, echo=FALSE}
+
+FtoC <- function(x) (x - 32) * (5/9)
+
+temperaturasMaio <- airquality[airquality$Month == 5,4]
+
+Temperature <- FtoC(temperaturasMaio)
+hist(Temperature,density=10, main="Histograma da Temperatura em Celsius",probability = T, color="grey")
+
+densityTemp <- density(Temperature)
+lines(densityTemp)
+
+```
+
+## Questão 4
+```{r Questão 4, echo=FALSE, warning=FALSE}
+sales <- read.table("https://training-course-material.com/images/8/8f/Sales.txt",header=TRUE)
+
+pct <- round(sales$SALES/sum(sales$SALES) * 100)
+lbls <- paste(sales$COUNTRY,pct)
+lbls <- paste(lbls,"%",sep="")
+
+pie(sales$SALES,main = "Grafico de Vendas por país",
+    col = rainbow(6), labels = lbls)
+legend("topright",legend = sales$COUNTRY, cex = 0.8, fill = rainbow(length(sales$SALES)))
+
+```
+
+## Questão 5
+```{r Questão 5, echo=FALSE, warning=FALSE}
+boxplot(InsectSprays$count ~InsectSprays$spray,
+        xlab="Tipo de Inseticida", ylab="Contagem de Insetos", main="Dados sobres os Insetos", outline=F, col="yellow")
+
+```
+
+## Questão 6
+```{r Questão 6, echo=FALSE, warning=FALSE}
+colors <- rownames(mtcars)
+plot(mtcars$wt, mtcars$mpg, main = "Mtcars data",
+     pch =7, cex = 2, xlab = "mpg", ylab="wt")
+
+```
+
+## Questão 7
+```{r Questão 7}
+```

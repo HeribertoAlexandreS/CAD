@@ -1,0 +1,308 @@
+---
+title: "R Markdown e Mineração de Texto"
+author: "Heriberto Alexandre da Silva Filho"
+date: "02/10/2020"
+output: html_document
+bibliography: C:\\Users\\Heriberto Filho\\Desktop\\UFRPE\\CAD\\ref.bib
+---
+
+# Relatório - Atividade 11 {.tabset}
+
+## Desafio 1
+**Enunciado:**
+
+Nuvem de palavra do discurso “Eu tenho um sonho” de Martin Luther King Jr. Também plote as palavras mais frequentes.
+
+**Solução:**
+
+*Gráfico palavras mais frequentes*
+
+```{r palavrasMaisFrequentes_DiscursoMartin, echo=TRUE, message=FALSE, warning=FALSE}
+library(tm)
+library(wordcloud)
+library (readr)
+
+#Carregando os dados
+discurso <- read_file("discurso_Martin")
+
+#Colapsando todas as palaras em um vetor de uma única posição
+discurso <- paste(discurso, collapse= " ")
+
+#Para processar os dados voce precisa converter-los para o tipo corpus
+VS <- VectorSource(discurso)
+corpus <-  Corpus(VS) 
+
+##########Limpeza dos dados#############
+
+#Coloca tudo em minusculo#
+corpus <- tm_map(corpus,content_transformer(tolower))
+
+#Remove pontuação#
+corpus <- tm_map(corpus,removePunctuation)
+
+#Remove Palavras Ruídos 
+corpus <- tm_map(corpus,removeWords,stopwords('portuguese'))
+
+#Converter para o formato de Matriz
+tdm <- as.matrix(TermDocumentMatrix(corpus))
+
+#Fornece as frequencias ordenadas de cada palavra
+fre <- sort(rowSums(tdm),decreasing = T)
+
+#Escolhendo um subconjunto de dados
+aux <- subset(fre,fre>2)
+
+#Plota o grafico de barras
+barplot(aux,las=2,col=rainbow(10),
+        ylab = "Nº Ocorrências",
+        main = "Frequência de termos no dircuso de Martin Luther King",
+        ylim= c(0,30))
+
+```
+
+
+*Nuvem de Palavras*
+
+```{r NuvemDePalavras_DiscursoMartin, echo=TRUE, message=FALSE, warning=FALSE}
+library(tm)
+library(wordcloud)
+library (readr)
+
+#Carregando os dados
+discurso <- read_file("discurso_Martin")
+
+#Colapsando todas as palaras em um vetor de uma única posição
+discurso <- paste(discurso, collapse= " ")
+
+#Para processar os dados voce precisa converter-los para o tipo corpus
+VS <- VectorSource(discurso)
+corpus <-  Corpus(VS) 
+
+#Limpeza
+corpus <- tm_map(corpus,tolower)
+corpus <- tm_map(corpus,removePunctuation)
+corpus <- tm_map(corpus,stripWhitespace)
+corpus <- tm_map(corpus,removeWords,stopwords('portuguese'))
+
+#Remover Urls
+removeURL <- function(x) gsub("http[^[:space:]]*","",x)
+corpus <- tm_map(corpus, removeURL)
+
+#remover simbolos especiais
+removeNumPunct <- function(x) gsub("[^[:alpha:][:space:]]*","",x)
+corpus <- tm_map(corpus, content_transformer(removeNumPunct))
+
+#Gerar a nuvem de palavras
+wordcloud(corpus,min.freq = 1,max.words = 60,
+          random.order = F, rot.per = 0.35, colors = brewer.pal(8,"Dark2") )
+```
+
+
+## Desafio 2
+**Enunciado:**
+
+Nuvem de palavra a partir dos twitters sobre Black Live Matters. Também faça uma análise de sentimentos com relação a esses twitters coletados.
+
+**Solução:**
+
+*Nuvem de Palavras*
+
+```{r NuvemDePalavras_BlackLivesMatters, echo=TRUE, message=FALSE, warning=FALSE}
+library(twitteR)
+library(tm)
+library(syuzhet)
+
+#Chaves de autorização
+consumer_key <- 'ou3IpE7jkFdQUo01ArWLjr0qK'
+consumer_secret <- 'fI1ATT62JhFs0cpsA1HS3wrnRvIlC0duSg3zjrkaXVfm13nDeV'
+access_token <- '1239670357612810241-gAAs23e19z01kGL7JneWQzTXdYzNkh'
+access_secret <- '0pOisvEFMQnmISm622YETmJ7u0Q3GIaut5zAy2a6mc2Jx'
+
+#Realizando a autenticação
+setup_twitter_oauth(consumer_key,consumer_secret,access_token,access_secret)
+
+#Invocando API do Twitter
+tweets <- searchTwitter("black lives matters",n=500,lang="pt")
+
+#Convertendo os twitters para o formato DF
+tweets <- twListToDF(tweets)
+
+#Limitando-se a coluna text
+tweets <- tweets$text
+
+#Para processar os dados voce precisa converter-los para o tipo corpus
+VS <- VectorSource(tweets)
+corpus <-  Corpus(VS) 
+
+#Limpeza
+corpus <- tm_map(corpus,tolower)
+corpus <- tm_map(corpus,removePunctuation)
+corpus <- tm_map(corpus,stripWhitespace)
+corpus <- tm_map(corpus,removeWords,stopwords('portuguese'))
+
+#Remover Urls
+removeURL <- function(x) gsub("http[^[:space:]]*","",x)
+corpus <- tm_map(corpus, removeURL)
+
+#remover simbolos especiais
+removeNumPunct <- function(x) gsub("[^[:alpha:][:space:]]*","",x)
+corpus <- tm_map(corpus, content_transformer(removeNumPunct))
+
+#Converter para o formato de Matriz
+tdm <- as.matrix(TermDocumentMatrix(corpus))
+
+#Fornece as frequencias ordenadas de cada palavra
+fre <- sort(rowSums(tdm),decreasing = T)
+
+#Escolhendo um subconjunto de dados
+aux <- subset(fre,fre>2)
+
+#Plota o grafico de barras
+barplot(aux,las=2,col=rainbow(10),
+        ylab = "Nº Ocorrências",
+        main = "Frequência de termos nos twitters sobre Black Lives Matters",
+        ylim= c(0,300))
+
+#Gerar a nuvem de palavras
+wordcloud(corpus,min.freq = 1,max.words = 60,
+          random.order = F, rot.per = 0.35, colors = brewer.pal(8,"Dark2") )
+```
+
+*Análise de Sentimentos*
+```{r AnaliseDeSentimentos_BlackLives, echo=TRUE, message=FALSE, warning=FALSE}
+library(twitteR)
+library(tm)
+library(syuzhet)
+
+#Chaves de autorização
+consumer_key <- 'ou3IpE7jkFdQUo01ArWLjr0qK'
+consumer_secret <- 'fI1ATT62JhFs0cpsA1HS3wrnRvIlC0duSg3zjrkaXVfm13nDeV'
+access_token <- '1239670357612810241-gAAs23e19z01kGL7JneWQzTXdYzNkh'
+access_secret <- '0pOisvEFMQnmISm622YETmJ7u0Q3GIaut5zAy2a6mc2Jx'
+
+#Realizando a autenticação
+setup_twitter_oauth(consumer_key,consumer_secret,access_token,access_secret)
+
+#Invocando API do Twitter
+tweets <- searchTwitter("black lives matters",n=500,lang="pt")
+
+#Convertendo os twitters para o formato DF
+tweets <- twListToDF(tweets)
+
+#Limitando-se a coluna text
+tweets <- tweets$text
+
+#Pontuando os tweets de acordo com os sentimentos
+ s<- get_nrc_sentiment(tweets)
+
+ #Plotando os sentimentios
+ barplot(colSums(s),las=2, col = rainbow(10),
+         ylab = "Contagem", main = "Sentimentos em relação ao termo Black Lives Matters")
+```
+
+## Desafio 3
+**Enunciado:**
+
+5 equações complexas usando Latex.
+
+**Solução:**
+
+*1º Equação:*
+
+$$\begin{eqnarray*}
+\overline{\overline{(\overline{A} \cdot B)} +
+\overline{(A + \overline{D})}} &=& \\
+\overline{\overline{(\overline{A} \cdot B)}}
+\cdot \overline{\overline{(A + \overline{D})}} &=& \\
+(\overline{A} \cdot B) \cdot (A + \overline{D}) &=& \\
+(\overline{A} \cdot B \cdot A) \cdot
+(\overline{A} \cdot \overline{B} \cdot \overline{D}) &=&
+\overline{A} \cdot B \cdot \overline{D}
+\end{eqnarray*}$$
+
+
+
+*2º Equação: *
+
+$$\[f(t)= \frac{A}{2} + \frac{jA}{2 \pi }\sum_{\stackrel{-\infty}{n\neq 0}}^{\infty}\frac{1}{n} \, e^{jn2\pi t}\]$$
+
+*3º Equação: * 
+
+$$\begin{equation}
+\int_{-L}^{L} sen \frac{m \pi x}{2}\,sen \frac{n \pi x}{2}\,dx =
+\left \{
+\begin{array}{cc}
+0, & m \neq n \\
+1, & m = n \\
+\end{array}
+\right.
+\end{equation}$$
+
+*4º Equação: * 
+
+$$\begin{eqnarray*}
+\int_{-L}^{L} f(x)\,dx &=& a_{0} \int_{-L}^{L}dx +
+\sum_{m=1}^{\infty} a_{m}
+\int_{-L}^{L} cos \frac{m \pi x}{2}\, dx \\
+&+& \sum_{m=1}^{\infty} b_{m}
+\int_{-L}^{L} sen \frac{m \pi x}{2}\, dx
+\end{eqnarray*}$$
+
+*5º Equação: * 
+
+$$_{92}^{239}U^{*} \stackrel{24 min}{\longrightarrow} _{93}^{293}Np^{*} +
+_{-1}^{0}\beta$$
+
+
+## Desafio 4
+**Enunciado:**
+
+Figuras relacionadas a ciência de dados e 2 tabelas (dica:  use datatable() do pacote DT).
+
+**Solução:**
+
+*Primeira Imagem  *
+
+![](\Users\Heriberto Filho\Desktop\UFRPE\CAD\Figura1.png)
+
+*Segunda Imagem  *
+
+![](\Users\Heriberto Filho\Desktop\UFRPE\CAD\Figura2.png)
+
+*Primeira Tabela (Iris)  *
+
+```{r VisualizaçãoDeTabelas1, echo=FALSE, warning=FALSE}
+library(DT)
+
+datatable(iris)
+```
+
+*Segunda Tabela (USArrests)  *
+
+```{r VisualizaçãoDeTabelas2, echo=FALSE, warning=FALSE}
+library(DT)
+datatable(USArrests)
+```
+
+## Desafio 5
+**Enunciado:**
+
+5 referências usando o BibTex.
+
+**Solução:**
+
+Trabalho publicados pelos professor da UFRPE:
+
+* @andrade2009methodology
+
+* @de2011multi
+
+* @cavalcanti2017nova
+
+* @azevedo2017aplicaccao
+
+* @santos2017dados
+
+
+### Referencias
+
